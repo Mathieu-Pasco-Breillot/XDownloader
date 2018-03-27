@@ -6,7 +6,9 @@
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.7.1" />
+    <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
+    <PackageReference Include="Selenium.Chrome.WebDriver" Version="2.37.0" />
   </ItemGroup>
 
   <ItemGroup>
