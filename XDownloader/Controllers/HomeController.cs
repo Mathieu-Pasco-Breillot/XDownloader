@@ -4,12 +4,19 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using XDownloader.Models;
 
 namespace XDownloader.Controllers
 {
     public class HomeController : Controller
     {
+        public HomeController(IConfiguration configuration)
+        {
+            var section = configuration["XConfig"];
+            var test = section;
+        }
+
         public IActionResult Index()
         {
             return View();
