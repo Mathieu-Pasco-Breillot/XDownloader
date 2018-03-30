@@ -1,20 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using XDownloader.Models;
 
 namespace XDownloader.Controllers
 {
     public class HomeController : Controller
     {
-        public HomeController(IConfiguration configuration)
+        private readonly XConfig xConfig;
+
+        public HomeController(IOptions<XConfig> xConfig)
         {
-            var section = configuration["XConfig"];
-            var test = section;
+            this.xConfig = xConfig.Value;
         }
 
         public IActionResult Index()
