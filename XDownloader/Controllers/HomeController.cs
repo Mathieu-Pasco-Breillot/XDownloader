@@ -7,17 +7,22 @@ namespace XDownloader.Controllers
 {
     public class HomeController : Controller
     {
+        #region Private Fields
+
         private readonly XConfig xConfig;
+
+        #endregion Private Fields
+
+        #region Public Constructors
 
         public HomeController(IOptions<XConfig> xConfig)
         {
             this.xConfig = xConfig.Value;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+        #endregion Public Constructors
+
+        #region Public Methods
 
         public IActionResult About()
         {
@@ -37,5 +42,12 @@ namespace XDownloader.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        #endregion Public Methods
     }
 }

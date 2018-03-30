@@ -1,5 +1,3 @@
-using System;
-
 namespace XDownloader.Models
 {
     public class ErrorViewModel
