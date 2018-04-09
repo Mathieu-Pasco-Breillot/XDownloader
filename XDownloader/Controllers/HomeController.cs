@@ -1,6 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using HtmlAgilityPack;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
+using System.Linq;
+using System.Net.Http;
 using XDownloader.Models;
 
 namespace XDownloader.Controllers
@@ -10,6 +14,7 @@ namespace XDownloader.Controllers
         #region Private Fields
 
         private readonly XConfig xConfig;
+        private static readonly HttpClient client = new HttpClient();
 
         #endregion Private Fields
 
@@ -23,6 +28,20 @@ namespace XDownloader.Controllers
         #endregion Public Constructors
 
         #region Public Methods
+
+        [HttpPost]
+        public void GetLinksFromHoster([FromBody] string hosterURL)
+        {
+            HtmlWeb web = new HtmlWeb();
+            HtmlDocument doc = web.Load(hosterURL);
+
+            HtmlNodeCollection links = doc.DocumentNode.SelectNodes("//a[@href]");
+
+            foreach (HtmlNode link in links)
+            {
+                var test = link;
+            }
+        }
 
         public IActionResult About()
         {
