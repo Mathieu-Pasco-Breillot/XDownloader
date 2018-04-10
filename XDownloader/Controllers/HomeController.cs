@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -36,10 +37,11 @@ namespace XDownloader.Controllers
             HtmlDocument doc = web.Load(hosterURL);
 
             HtmlNodeCollection links = doc.DocumentNode.SelectNodes("//a[@href]");
-
+            List<HtmlAttribute> attributesLinks = new List<HtmlAttribute>();
             foreach (HtmlNode link in links)
             {
-                var test = link;
+                HtmlAttribute absoluteLink = link.Attributes.First(a => a.Name == "href" && a.Value.StartsWith("https://www.dl-protect"));
+                attributesLinks.Add(absoluteLink);
             }
         }
 
