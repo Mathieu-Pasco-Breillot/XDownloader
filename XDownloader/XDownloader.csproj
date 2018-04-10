@@ -10,6 +10,8 @@
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.0.3" />
     <PackageReference Include="Selenium.Chrome.WebDriver" Version="2.37.0" />
+    <PackageReference Include="Selenium.Support" Version="3.11.1" />
+    <PackageReference Include="Selenium.WebDriver" Version="3.11.1" />
   </ItemGroup>
 
   <ItemGroup>
