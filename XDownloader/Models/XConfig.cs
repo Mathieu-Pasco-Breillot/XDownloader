@@ -5,6 +5,7 @@ namespace XDownloader.Models
     public class XConfig
     {
         public List<Source> Sources { get; set; }
+        public List<Host> Hosts { get; set; }
     }
 
     public class Source
@@ -30,5 +31,13 @@ namespace XDownloader.Models
     {
         public string Source { get; set; }
         public string Destination { get; set; }
+    }
+
+    public class Host
+    {
+        public string Name { get; set; }
+        public string URL { get; set; }
+        public string Login { get; set; }
+        public string Password { get; set; }
     }
 }
