@@ -1,8 +1,11 @@
 ﻿using HtmlAgilityPack;
+using log4net;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,7 +37,7 @@ namespace XDownloader.Controllers
         #region Public Methods
 
         [HttpPost("LinksFromProtector", Name = "Get_Link_From_Protector_Page")]
-        public void GetLinkFromProtector([FromBody] string protecterURL)
+        public IActionResult GetLinkFromProtector([FromBody] string protecterURL)
         {
             var options = new ChromeOptions();
             options.AddArgument("headless");
@@ -61,13 +64,35 @@ namespace XDownloader.Controllers
                 driver.FindElementByCssSelector("#login-form > div > button").Click();
 
                 //driver.Navigate().GoToUrl(link);
-                button = driver.FindElement(By.PartialLinkText("lancer votre téléchargement"));
-                string downloadLink = button.GetAttribute("href");
+                button = driver.FindElementByCssSelector("#dl > form > div > center > a");
+                string downloadLink = button.GetAttribute("href");                
+                int slashIndex = downloadLink.LastIndexOf('/');
+                string fileName = downloadLink.Substring(slashIndex + 1, downloadLink.Length - slashIndex - 1);
+
+                WebClient wb = new WebClient();                
+
+                try
+                {
+                    wb.DownloadFileAsync(new Uri(downloadLink), $"D:\\Videos\\{fileName}");
+                }
+                catch (ArgumentNullException ane)
+                {
+                    return BadRequest($"l'URL suivante est peut-être incorrecte : {downloadLink} ?\n Ou le chemin d'enregistrement : {fileName} est inconnu ?\n Exception : {ane}"); 
+                }
+                catch (WebException we)
+                {
+                    return StatusCode((int)HttpStatusCode.InternalServerError, we);
+                }
+                catch (InvalidOperationException ioe)
+                {
+                    return StatusCode((int)HttpStatusCode.InternalServerError, ioe);
+                }
+                return Ok($"Le téléchargement du fichier {fileName} est en cours.");
             }
         }
 
-        [HttpPost("LinksFromHoster", Name = "Get_All_Links_From_Hoster_Page")]
-        public HttpStatusCode GetLinksFromHoster([FromBody] string hosterURL)
+        [HttpPost("LinksFromSource", Name = "Get_All_Links_From_Source_Page")]
+        public IActionResult GetLinksFromSource([FromBody] string hosterURL)
         {
             HtmlWeb web = new HtmlWeb();
             HtmlDocument doc = web.Load(hosterURL);
@@ -82,15 +107,16 @@ namespace XDownloader.Controllers
                     attributesLinks.Add(absoluteLink);
                 }
                 if (attributesLinks.Count > 0)
-                    return HttpStatusCode.OK;
+                    return Ok();
                 else
-                    return HttpStatusCode.NotFound;
+                    return NotFound();
             }
             else
             {
-                return HttpStatusCode.Unauthorized;
+                return Unauthorized();
             }
         }
+
         #endregion Public Methods
     }
 }
