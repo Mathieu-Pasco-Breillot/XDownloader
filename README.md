@@ -15,6 +15,9 @@ Lancez une première compilation de la solution complète, cela devrait automati
 ### En cas d'erreur de compilation du à la restauration des packages NuGet
 Faites un clique droit sur la solution depuis l'**Explorateur de solutions** puis cliquez sur **Restaurer les packages NuGet**.
 
+## Configuration de la solution
+Dupliquer le fichier **appsettings.example.json** en **appsettings.json** en renseignez-le avec des valeurs adéquat.
+
 ## Utiliser le XDownloader
 Plusieurs fonctionnalités seront mises à disposition à terme.
 Actuellement il existe 2 routes d'API fonctionnelles.
