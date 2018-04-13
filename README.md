@@ -1,6 +1,10 @@
 # XDownloader
 Projet de gestionnaire de téléchargement multiplateforme automatique afin de récupérer le fichier distant à partir d'un lien.
 
+### Documentation fonctionnelle
+L'ensemble des ressources sont disponible à cette adresse : https://goo.gl/eF7zZp.
+Ces ressources sont publiques et consultables par tous(tes)
+
 ## Pré-requis
 1. Installer [Visual Studio 2017 Community](https://www.visualstudio.com/fr/thank-you-downloading-visual-studio/?sku=Community&rel=15)
     * Installer tous les composants des sections :
