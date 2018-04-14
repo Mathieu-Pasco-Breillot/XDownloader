@@ -16,9 +16,11 @@ namespace XDownloader.Controllers
     [Route("api")]
     public class ApiController : Controller
     {
+
         #region Private Fields
 
         private readonly XConfig xConfig;
+        private ChromeOptions options = new ChromeOptions();
 
         #endregion Private Fields
 
@@ -31,15 +33,26 @@ namespace XDownloader.Controllers
 
         #endregion Public Constructors
 
+        #region Public Properties
+
+        public ChromeOptions Options
+        {
+            get
+            {
+                options.AddArgument("headless");
+                return options;
+            }
+            set => options = value;
+        }
+
+        #endregion Public Properties
+
         #region Public Methods
 
         [HttpPost("LinksFromProtector", Name = "Get_Link_From_Protector_Page")]
         public IActionResult GetLinkFromProtector([FromBody] string protecterURL)
         {
-            var options = new ChromeOptions();
-            options.AddArgument("headless");
-
-            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), options))
+            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
             {
                 string link = FindHostUnderProtector(protecterURL, driver);
                 string relativeLink = string.Empty;
@@ -73,10 +86,9 @@ namespace XDownloader.Controllers
         [HttpPost("LinksFromSource", Name = "Get_All_Links_From_Source_Page")]
         public IActionResult GetLinksFromSource([FromBody] string sourceURL, string desiredHost = null)
         {
-            var options = new ChromeOptions();
-            options.AddArgument("headless");
             List<string> protectedLinks = new List<string>();
-            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), options))
+
+            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
             {
                 driver.Navigate().GoToUrl(sourceURL);
                 var links = driver.FindElementsByCssSelector("a[href*=\"dl-protect\"]");
@@ -137,10 +149,7 @@ namespace XDownloader.Controllers
 
         private List<string> FilterUriList(List<string> protectedLinks, string desiredHost)
         {
-            var options = new ChromeOptions();
-            options.AddArgument("headless");
-
-            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), options))
+            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
             {
                 List<string> uriList = new List<string>();
                 foreach (string protectedLink in protectedLinks)
@@ -154,5 +163,6 @@ namespace XDownloader.Controllers
         }
 
         #endregion Private Methods
+
     }
 }
