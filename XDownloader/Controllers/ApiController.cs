@@ -1,5 +1,4 @@
-﻿using HtmlAgilityPack;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -74,32 +73,23 @@ namespace XDownloader.Controllers
         [HttpPost("LinksFromSource", Name = "Get_All_Links_From_Source_Page")]
         public IActionResult GetLinksFromSource([FromBody] string sourceURL, string desiredHost = null)
         {
-            HtmlWeb web = new HtmlWeb();
-            HtmlDocument doc = web.Load(sourceURL);
+            var options = new ChromeOptions();
+            options.AddArgument("headless");
+            List<string> protectedLinks = new List<string>();
+            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), options))
+            {
+                driver.Navigate().GoToUrl(sourceURL);
+                var links = driver.FindElementsByCssSelector("a[href*=\"dl-protect\"]");
 
-            HtmlNodeCollection links = doc.DocumentNode.SelectNodes("//a[@href]");
-            if (links != null)
-            {
-                List<string> attributesLinks = new List<string>();
-                foreach (HtmlNode link in links)
+                foreach (var link in links)
                 {
-                    HtmlAttribute absoluteLink = link.Attributes.FirstOrDefault(a => a.Name == "href" && a.Value.StartsWith("https://www.dl-protect"));
-                    if (absoluteLink != null)
-                        attributesLinks.Add(absoluteLink.Value);
+                    protectedLinks.Add(link.GetAttribute("href"));
                 }
-                if (attributesLinks.Count > 0)
-                {
-                    if (desiredHost == null)
-                        return Json(attributesLinks);
-                    else
-                        return Json(FilterUriList(attributesLinks, desiredHost));
-                }
+
+                if (desiredHost == null)
+                    return Json(protectedLinks);
                 else
-                    return NotFound();
-            }
-            else
-            {
-                return Unauthorized();
+                    return Json(FilterUriList(protectedLinks, desiredHost));
             }
         }
 
