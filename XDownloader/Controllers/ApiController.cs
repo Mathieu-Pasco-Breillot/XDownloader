@@ -50,47 +50,54 @@ namespace XDownloader.Controllers
         #region Public Methods
 
         [HttpPost("LinksFromProtector", Name = "Get_Link_From_Protector_Page")]
-        public IActionResult GetLinkFromProtector([FromBody] string protecterURL)
+        public IActionResult GetLinkFromProtector([FromBody] RequestParameters parameters)
         {
-            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
+            if (parameters != null && !string.IsNullOrEmpty(parameters.Url))
             {
-                string link = FindHostUnderProtector(protecterURL, driver);
-                string relativeLink = string.Empty;
+                using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
+                {
+                    string link = FindHostUnderProtector(parameters.Url, driver);
+                    string relativeLink = string.Empty;
 
-                Host host = xConfig.Hosts.First(h => h.Name == "uptobox");
-                // traitement du cas ou le lien est n'est pas en https
-                if (link.Contains("https"))
-                    relativeLink = link.Replace(host.URL, string.Empty);
-                else
-                    relativeLink = link.Replace(host.URL.Replace("https", "http"), string.Empty);
+                    Host host = xConfig.Hosts.First(h => h.Name == "uptobox");
+                    // traitement du cas ou le lien est n'est pas en https
+                    if (link.Contains("https"))
+                        relativeLink = link.Replace(host.URL, string.Empty);
+                    else
+                        relativeLink = link.Replace(host.URL.Replace("https", "http"), string.Empty);
 
-                #region Host Authentication And Redirection
+                    #region Host Authentication And Redirection
 
-                // authentication on uptobox.com
-                driver.Navigate().GoToUrl($"{host.URL}?op=login&referer={relativeLink}");
-                driver.FindElementByCssSelector("#login-form > input[name=login]").SendKeys(host.Login);
-                driver.FindElementByCssSelector("#login-form > input[name=password]").SendKeys(host.Password);
-                driver.FindElementByCssSelector("#login-form > div > button").Click();
+                    // authentication on uptobox.com
+                    driver.Navigate().GoToUrl($"{host.URL}?op=login&referer={relativeLink}");
+                    driver.FindElementByCssSelector("#login-form > input[name=login]").SendKeys(host.Login);
+                    driver.FindElementByCssSelector("#login-form > input[name=password]").SendKeys(host.Password);
+                    driver.FindElementByCssSelector("#login-form > div > button").Click();
 
-                #endregion Host Authentication And Redirection
+                    #endregion Host Authentication And Redirection
 
-                // On récupère le lien de téléchargement fourni par l'hébergeur
-                string downloadLink = driver.FindElementByCssSelector("#dl > form > div > center > a").GetAttribute("href");
-                int slashIndex = downloadLink.LastIndexOf('/');
-                // On supprime le '/' se trouvant au début de l'URL.
-                string fileName = downloadLink.Substring(slashIndex + 1, downloadLink.Length - slashIndex - 1);
-                return ExecuteDownload(downloadLink, fileName);
+                    // On récupère le lien de téléchargement fourni par l'hébergeur
+                    string downloadLink = driver.FindElementByCssSelector("#dl > form > div > center > a").GetAttribute("href");
+                    int slashIndex = downloadLink.LastIndexOf('/');
+                    // On supprime le '/' se trouvant au début de l'URL.
+                    string fileName = downloadLink.Substring(slashIndex + 1, downloadLink.Length - slashIndex - 1);
+                    return ExecuteDownload(downloadLink, fileName);
+                }
+            }
+            else
+            {
+                return BadRequest($"Un ou plusieurs paramètres d'entrés sont manquants voici le contenu de vos paramètres : {parameters.ToString()}");
             }
         }
 
         [HttpPost("LinksFromSource", Name = "Get_All_Links_From_Source_Page")]
-        public IActionResult GetLinksFromSource([FromBody] string sourceURL, string desiredHost = null)
+        public IActionResult GetLinksFromSource([FromBody] RequestParameters parameters)
         {
             List<string> protectedLinks = new List<string>();
 
             using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
             {
-                driver.Navigate().GoToUrl(sourceURL);
+                driver.Navigate().GoToUrl(parameters.Url);
                 var links = driver.FindElementsByCssSelector("a[href*=\"dl-protect\"]");
 
                 foreach (var link in links)
@@ -98,10 +105,10 @@ namespace XDownloader.Controllers
                     protectedLinks.Add(link.GetAttribute("href"));
                 }
 
-                if (desiredHost == null)
+                if (parameters.Hosts.Count == 0)
                     return Json(protectedLinks);
                 else
-                    return Json(FilterUriList(protectedLinks, desiredHost));
+                    return Json(FilterUriList(protectedLinks, parameters.Hosts));
             }
         }
 
@@ -115,7 +122,7 @@ namespace XDownloader.Controllers
             {
                 driver.Navigate().GoToUrl(protecterURL);
                 driver.FindElement(By.ClassName("continuer")).Click();
-                var link = driver.FindElementByPartialLinkText("uptobox.com").Text;
+                var link = driver.FindElementByCssSelector("div.lienet > a[href*=\"http\"]").Text;
                 return link;
             }
             catch (Exception ex)
@@ -147,7 +154,7 @@ namespace XDownloader.Controllers
             return Ok($"Le téléchargement du fichier {fileName} est en cours.");
         }
 
-        private List<string> FilterUriList(List<string> protectedLinks, string desiredHost)
+        private List<string> FilterUriList(List<string> protectedLinks, List<string> desiredHosts)
         {
             using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
             {
@@ -155,8 +162,14 @@ namespace XDownloader.Controllers
                 foreach (string protectedLink in protectedLinks)
                 {
                     string hostedLink = FindHostUnderProtector(protectedLink, driver);
-                    if (!string.IsNullOrEmpty(hostedLink) && hostedLink.Contains(desiredHost))
-                        uriList.Add(hostedLink);
+                    if (!string.IsNullOrEmpty(hostedLink))
+                    {
+                        foreach (string desiredHost in desiredHosts)
+                        {
+                            if (hostedLink.Contains(desiredHost))
+                                uriList.Add(hostedLink);
+                        }
+                    }
                 }
                 return uriList;
             }
