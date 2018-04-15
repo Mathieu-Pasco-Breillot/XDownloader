@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -19,42 +20,82 @@ namespace XDownloader.Controllers
 
         #region Private Fields
 
+        private readonly IConfiguration configuration;
         private readonly XConfig xConfig;
-        private ChromeOptions options = new ChromeOptions();
+        private ChromeOptions chromeOptions = new ChromeOptions();
 
         #endregion Private Fields
 
         #region Public Constructors
 
-        public ApiController(IOptions<XConfig> xConfig)
+        public ApiController(IOptions<XConfig> xConfig, IConfiguration Configuration)
         {
             this.xConfig = xConfig.Value;
+            this.configuration = Configuration;
         }
 
         #endregion Public Constructors
 
         #region Public Properties
 
-        public ChromeOptions Options
+        public string ChromeDriverDirectory
         {
             get
             {
-                options.AddArgument("headless");
-                return options;
+                return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             }
-            set => options = value;
         }
+
+        public ChromeOptions ChromeOptions
+        {
+            get
+            {
+                chromeOptions.AddArgument("headless");
+                return chromeOptions;
+            }
+            set => chromeOptions = value;
+        }
+
+        public IConfiguration Configuration { get; set; }
 
         #endregion Public Properties
 
         #region Public Methods
 
+        public IActionResult ExecuteDownload(string downloadLink, string destinationPath, string fileName)
+        {
+            WebClient wb = new WebClient();
+            try
+            {
+                // On lance le téléchargement du fichier de façon asynchrone.
+                wb.DownloadFileAsync(new Uri(downloadLink), $"{destinationPath + fileName}");
+            }
+            catch (ArgumentNullException ane)
+            {
+                return BadRequest($"l'URL suivante est peut-être incorrecte : {downloadLink} ?\n Ou le chemin d'enregistrement : {destinationPath} est inconnu ?\n Exception : {ane}");
+            }
+            catch (WebException we)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, we);
+            }
+            catch (InvalidOperationException ioe)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, ioe);
+            }
+            return Ok($"Le téléchargement du fichier {fileName} est en cours à l'emplacement {destinationPath}.");
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         [HttpPost("LinksFromProtector", Name = "Get_Link_From_Protector_Page")]
         public IActionResult GetLinkFromProtector([FromBody] RequestParameters parameters)
         {
             if (parameters != null && !string.IsNullOrEmpty(parameters.Url))
             {
-                using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
+                using (var driver = new ChromeDriver(ChromeDriverDirectory, ChromeOptions))
                 {
                     string link = FindHostUnderProtector(parameters.Url, driver);
                     string relativeLink = string.Empty;
@@ -81,7 +122,7 @@ namespace XDownloader.Controllers
                     int slashIndex = downloadLink.LastIndexOf('/');
                     // On supprime le '/' se trouvant au début de l'URL.
                     string fileName = downloadLink.Substring(slashIndex + 1, downloadLink.Length - slashIndex - 1);
-                    return ExecuteDownload(downloadLink, fileName);
+                    return ExecuteDownload(downloadLink, Configuration["DestinationDownload"], fileName);
                 }
             }
             else
@@ -95,7 +136,7 @@ namespace XDownloader.Controllers
         {
             List<string> protectedLinks = new List<string>();
 
-            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
+            using (var driver = new ChromeDriver(ChromeDriverDirectory, ChromeOptions))
             {
                 driver.Navigate().GoToUrl(parameters.Url);
                 var links = driver.FindElementsByCssSelector("a[href*=\"dl-protect\"]");
@@ -131,32 +172,9 @@ namespace XDownloader.Controllers
             }
         }
 
-        private IActionResult ExecuteDownload(string downloadLink, string fileName)
-        {
-            WebClient wb = new WebClient();
-            try
-            {
-                // On lance le téléchargement du fichier de façon asynchrone.
-                wb.DownloadFileAsync(new Uri(downloadLink), $"D:\\Videos\\{fileName}");
-            }
-            catch (ArgumentNullException ane)
-            {
-                return BadRequest($"l'URL suivante est peut-être incorrecte : {downloadLink} ?\n Ou le chemin d'enregistrement : {fileName} est inconnu ?\n Exception : {ane}");
-            }
-            catch (WebException we)
-            {
-                return StatusCode((int)HttpStatusCode.InternalServerError, we);
-            }
-            catch (InvalidOperationException ioe)
-            {
-                return StatusCode((int)HttpStatusCode.InternalServerError, ioe);
-            }
-            return Ok($"Le téléchargement du fichier {fileName} est en cours.");
-        }
-
         private List<string> FilterUriList(List<string> protectedLinks, List<string> desiredHosts)
         {
-            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Options))
+            using (var driver = new ChromeDriver(ChromeDriverDirectory, ChromeOptions))
             {
                 List<string> uriList = new List<string>();
                 foreach (string protectedLink in protectedLinks)
