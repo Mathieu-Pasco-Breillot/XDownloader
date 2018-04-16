@@ -1,6 +1,4 @@
 ﻿using HtmlAgilityPack;
-using log4net;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using OpenQA.Selenium;
@@ -62,7 +60,7 @@ namespace XDownloader.Controllers
                 driver.FindElementByCssSelector("#login-form > input[name=password]").SendKeys(host.Password);
                 driver.FindElementByCssSelector("#login-form > div > button").Click();
 
-                #endregion
+                #endregion Host Authentication And Redirection
 
                 // On récupère le lien de téléchargement fourni par l'hébergeur
                 string downloadLink = driver.FindElementByCssSelector("#dl > form > div > center > a").GetAttribute("href");
@@ -74,22 +72,28 @@ namespace XDownloader.Controllers
         }
 
         [HttpPost("LinksFromSource", Name = "Get_All_Links_From_Source_Page")]
-        public IActionResult GetLinksFromSource([FromBody] string hosterURL)
+        public IActionResult GetLinksFromSource([FromBody] string sourceURL, string desiredHost = null)
         {
             HtmlWeb web = new HtmlWeb();
-            HtmlDocument doc = web.Load(hosterURL);
+            HtmlDocument doc = web.Load(sourceURL);
 
             HtmlNodeCollection links = doc.DocumentNode.SelectNodes("//a[@href]");
             if (links != null)
             {
-                List<HtmlAttribute> attributesLinks = new List<HtmlAttribute>();
+                List<string> attributesLinks = new List<string>();
                 foreach (HtmlNode link in links)
                 {
-                    HtmlAttribute absoluteLink = link.Attributes.First(a => a.Name == "href" && a.Value.StartsWith("https://www.dl-protect"));
-                    attributesLinks.Add(absoluteLink);
+                    HtmlAttribute absoluteLink = link.Attributes.FirstOrDefault(a => a.Name == "href" && a.Value.StartsWith("https://www.dl-protect"));
+                    if (absoluteLink != null)
+                        attributesLinks.Add(absoluteLink.Value);
                 }
                 if (attributesLinks.Count > 0)
-                    return Ok(attributesLinks);
+                {
+                    if (desiredHost == null)
+                        return Json(attributesLinks);
+                    else
+                        return Json(FilterUriList(attributesLinks, desiredHost));
+                }
                 else
                     return NotFound();
             }
@@ -101,21 +105,7 @@ namespace XDownloader.Controllers
 
         #endregion Public Methods
 
-        private List<string> FilterUriList(List<HtmlAttribute> attributesLinks)
-        {
-            var options = new ChromeOptions();
-            options.AddArgument("headless");
-
-            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), options))
-            {
-                List<string> uriList = new List<string>();
-                foreach (HtmlAttribute attribute in attributesLinks)
-                {
-                    string link = FindHostUnderProtector(attribute.Value, driver);
-                }
-                return uriList;
-            }
-        }
+        #region Private Methods
 
         private static string FindHostUnderProtector(string protecterURL, ChromeDriver driver)
         {
@@ -154,5 +144,25 @@ namespace XDownloader.Controllers
             }
             return Ok($"Le téléchargement du fichier {fileName} est en cours.");
         }
+
+        private List<string> FilterUriList(List<string> protectedLinks, string desiredHost)
+        {
+            var options = new ChromeOptions();
+            options.AddArgument("headless");
+
+            using (var driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), options))
+            {
+                List<string> uriList = new List<string>();
+                foreach (string protectedLink in protectedLinks)
+                {
+                    string hostedLink = FindHostUnderProtector(protectedLink, driver);
+                    if (!string.IsNullOrEmpty(hostedLink) && hostedLink.Contains(desiredHost))
+                        uriList.Add(hostedLink);
+                }
+                return uriList;
+            }
+        }
+
+        #endregion Private Methods
     }
 }
