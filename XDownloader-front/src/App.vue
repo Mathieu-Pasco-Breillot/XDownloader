@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<style lang="scss">
+<style lang="css">
 #app {
   font-family: 'Fira Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -19,12 +19,9 @@
 }
 #nav {
   padding: 30px;
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+}
+#nav > a {
+  font-weight: bold;
+  color: #2c3e50;
 }
 </style>
