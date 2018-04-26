@@ -14,7 +14,8 @@ namespace XDownloader.Models
         public override string ToString()
         {
             string hosts = string.Empty;
-            Hosts.ForEach(x => hosts += $"{x},");
+            if (Hosts != null && Hosts.Count != 0)
+                Hosts.ForEach(x => hosts += $"{x},");
             return $"URL : {Url} | Hosts : {hosts}";
         }
     }
