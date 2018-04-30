@@ -1,38 +1,31 @@
 {
-	"compilerOptions": {
-		"allowUnusedLabels": false,
-		"allowJs": true,
-		"alwaysStrict": true,
-		"charset": "UTF-8",
-		"declaration": false,
-		"emitBOM": false,
-		"inlineSourceMap": false,
-		"inlineSources": false,
-		"sourceMap": false,
-		"module": "commonjs",
-		"moduleResolution": "node",
-		"newLine": "LF",
-		"noFallthroughCasesInSwitch": true,
-		"noImplicitAny": true,
-		"noImplicitReturns": true,
-		"noImplicitThis": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"noImplicitUseStrict": false,
-		"target": "esnext",
-		"importHelpers": true,
-		"removeComments": true,
-		"preserveConstEnums": false,
-		"downlevelIteration": true,
-		"strict": true,
-		"strictNullChecks": true,
-		"strictFunctionTypes": true,
-		"strictPropertyInitialization": true,
-		"experimentalDecorators": true,
-		"lib": ["esnext", "dom"]
-	},
-	"files": [
-		"gulpfile.ts"
-	],
-	"compileOnSave": false
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "strict": true,
+    "jsx": "preserve",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "types": [
+      "node"    ],
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
