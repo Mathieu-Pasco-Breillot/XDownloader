@@ -1,3 +1,6 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/4lugtd9hhst75p9k?svg=true)](https://ci.appveyor.com/project/Mathieu-Pasco-Breillot/xdownloader)
+
+
 # XDownloader
 Projet de gestionnaire de téléchargement multiplateforme automatique afin de récupérer le fichier distant à partir d'un lien.
 
