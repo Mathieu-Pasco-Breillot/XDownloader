@@ -62,6 +62,14 @@ namespace XDownloader.Controllers
 
         #region Public Methods
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="downloadLink"></param>
+        /// <param name="destinationPath"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        [HttpPost("Download", Name = "Execute_Download")]
         public IActionResult ExecuteDownload(string downloadLink, string destinationPath, string fileName)
         {
             WebClient wb = new WebClient();
