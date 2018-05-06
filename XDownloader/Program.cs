@@ -7,6 +7,7 @@ using System.Reflection;
 
 namespace XDownloader
 {
+#pragma warning disable CS1591 // Commentaire XML manquant pour le type ou le membre visible publiquement
     public class Program
     {
         public static void Main(string[] args)
@@ -21,4 +22,5 @@ namespace XDownloader
                 .UseStartup<Startup>()
                 .Build();
     }
+#pragma warning restore CS1591 // Commentaire XML manquant pour le type ou le membre visible publiquement
 }

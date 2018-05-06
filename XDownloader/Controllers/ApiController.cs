@@ -89,6 +89,7 @@ namespace XDownloader.Controllers
         /// <exception cref="ArgumentNullException">Raised if either the <paramref name="downloadLink"/> or the <paramref name="destinationPath"/> is incorrect.</exception>
         /// <exception cref="WebException">Raised if a network error occured and the download failed.</exception>
         /// <exception cref="InvalidOperationException">Raised if any error occurs.</exception>
+        [HttpPost("Download", Name = "Execute_Download")]
         public IActionResult ExecuteDownload(string downloadLink, string destinationPath, string fileName)
         {
             WebClient wb = new WebClient();
