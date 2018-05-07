@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace XDownloader.Models
 {
@@ -17,9 +18,13 @@ namespace XDownloader.Models
         /// <summary>
         /// Any kind of url, it may be a protected url or a source url.
         /// </summary>
+        [Url]
+        [Required]
         public string Url { get; set; }
 
         #endregion Public Properties
+
+        #region Public Methods
 
         /// <summary>
         /// Display the properties content.
@@ -32,5 +37,7 @@ namespace XDownloader.Models
                 Hosts.ForEach(x => hosts += $"{x},");
             return $"URL : {Url} | Hosts : {hosts}";
         }
+
+        #endregion Public Methods
     }
 }
