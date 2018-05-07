@@ -13,6 +13,9 @@ using XDownloader.Models;
 
 namespace XDownloader.Controllers
 {
+    /// <summary>
+    /// Main class of the application. It provides the main features like : perform a download.
+    /// </summary>
     [Produces("application/json")]
     [Route("api")]
     public class ApiController : Controller
@@ -76,31 +79,42 @@ namespace XDownloader.Controllers
         #region Public Methods
 
         /// <summary>
-        /// Perform a file download from the <paramref name="downloadLink"/> to the <paramref name="destinationPath"/> with the <paramref name="fileName"/>.
+        /// Perform a file download from the downloadLink to the destinationPath with the fileName provided.
         /// </summary>
-        /// <param name="downloadLink">Link from which we have to get the file.</param>
-        /// <param name="destinationPath">Destination to where we have to save the file.</param>
-        /// <param name="fileName">The name of the downloaded file.</param>
-        /// <returns>
-        /// HTTP 200 if the asynchronous download has started correctly. HTTP 400 if either the <paramref name="downloadLink"/> or the <paramref
-        /// name="destinationPath"/> is incorrect. HTTP 500 if a network error occured and the download failed. HTTP 500 if a generic error occured. Please refer
-        /// to the exception.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">Raised if either the <paramref name="downloadLink"/> or the <paramref name="destinationPath"/> is incorrect.</exception>
-        /// <exception cref="WebException">Raised if a network error occured and the download failed.</exception>
-        /// <exception cref="InvalidOperationException">Raised if any error occurs.</exception>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     {
+        ///         "downloadLink":"http://www9.uptobox.com/dl/S97L9yxcI1bP3qBxhfyUCK3GWp3iK1X4cHKCRi5y0b5sT5OJqF-mjhUkPnGXK85iqA-aIqDAcfq18gwjMv_LtDI6zAHZkg1GhJcxVOZoVEs5V2Y6GZ5KvCrjxtb1eyJkG_r99QNdKYw3ap_QXkv19Q/Gotham.S04E20.FASTSUB.VOSTFR.720p.WEBRiP.x264-GODSPACE.WwW.Zone-Telechargement1.com.mkv",
+        ///         "destinationPath":"/path/show/season/",
+        ///         "filename":"Gotham.S04E20.FASTSUB.VOSTFR.720p.WEBRiP.x264-GODSPACE.WwW.Zone-Telechargement1.com.mkv"
+        ///     }
+        /// </remarks>
+        /// <param name="parameters">The <see cref="DownloadParameters"/> model which contains the necessary values.</param>
+        /// <returns></returns>
+        /// <response code="200">The asynchronous download has started correctly.</response>
+        /// <response code="400">
+        /// If the <see cref="ArgumentNullException"/> is raised, it is either because the downloadLink or the destinationPath is unset or incorrect.
+        /// </response>
+        /// <response code="500">
+        /// If the <see cref="WebException"/> is raised, it is because a network error occured and the download failed or else it is the <see
+        /// cref="InvalidOperationException"/> that has been raised if any error occured.
+        /// </response>
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
         [HttpPost("Download", Name = "Execute_Download")]
-        public IActionResult ExecuteDownload(string downloadLink, string destinationPath, string fileName)
+        public IActionResult ExecuteDownload([FromBody] DownloadParameters parameters)
         {
             WebClient wb = new WebClient();
             try
             {
-                // On lance le téléchargement du fichier de façon asynchrone.
-                wb.DownloadFileAsync(new Uri(downloadLink), $"{destinationPath + fileName}");
+                // Starts the download asynchronously
+                wb.DownloadFileAsync(new Uri(parameters.DownloadLink), $"{parameters.DestinationPath + parameters.FileName}");
             }
             catch (ArgumentNullException ane)
             {
-                return BadRequest($"l'URL suivante est peut-être incorrecte : {downloadLink} ?\n Ou le chemin d'enregistrement : {destinationPath} est inconnu ?\n Exception : {ane}");
+                return BadRequest($"L'URL suivante est peut-être incorrecte : {parameters.DownloadLink} ?\n Ou le chemin d'enregistrement : {parameters.DestinationPath} est inconnu ?\n Exception : {ane}");
             }
             catch (WebException we)
             {
@@ -110,14 +124,39 @@ namespace XDownloader.Controllers
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, ioe);
             }
-            return Ok($"Le téléchargement du fichier {fileName} est en cours à l'emplacement suivant : {destinationPath}");
+            return Ok($"Le téléchargement du fichier {parameters.FileName} est en cours à l'emplacement suivant : {parameters.DestinationPath}");
         }
 
         /// <summary>
-        /// Retrieve the link under the protected URL. It only works for the Uptobox host.
+        /// Retrieve the link under the protected URL. It only works for the Uptobox host for now.
         /// </summary>
+        /// <remarks>
+        /// Minimal sample request:
+        ///
+        ///     {
+        ///         "url": "https://www.dl-protect1.com/1234556001234556021234556101234556156bsfkx1psaa8"
+        ///     }
+        ///
+        /// Extended sample request
+        ///
+        ///     {
+        ///         "url": "https://www.dl-protect1.com/1234556001234556021234556101234556156bsfkx1psaa8",
+        ///         "hosts": [ "uptobox", "1fichier" ] 
+        ///     }
+        /// </remarks>
         /// <param name="parameters">The request parameters serialize as an object.</param>
-        /// <returns>HTTP 400 if one of the URL property is missing from the <paramref name="parameters"/> object.</returns>
+        /// <returns>The host link found from the protected link given through the <paramref name="parameters"/></returns>
+        /// <response code="200">
+        /// A filtered list of url unprotected if a host was provided.
+        /// Otherwise it will return a list of all the protected url found on the source page.
+        /// </response>
+        /// <response code="400">
+        /// If a required parameter was missing this code is return.
+        /// Yous should check the reponse message to understand what was missing.
+        /// </response>
+        /// <response code="404">
+        /// If no host link could be found from the protected link.
+        /// </response>
         [HttpPost("LinksFromProtector", Name = "Get_Link_From_Protector_Page")]
         public IActionResult GetLinkFromProtector([FromBody] RequestParameters parameters)
         {
@@ -126,7 +165,10 @@ namespace XDownloader.Controllers
             {
                 using (var driver = new ChromeDriver(ChromeDriverDirectory, ChromeOptions))
                 {
-                    string link = FindHostUnderProtector(parameters.Url, driver);
+                    string link = FindHostLinkUnderProtector(parameters.Url, driver);
+                    if (string.IsNullOrEmpty(link))
+                        return NotFound($"Impossible de trouver un lien d'hébergeur pour les paramètres suivants : {parameters.ToString()}");
+
                     string relativeLink = string.Empty;
 
                     Host host = xConfig.Hosts.First(h => h.Name == "uptobox");
@@ -151,10 +193,7 @@ namespace XDownloader.Controllers
 
                     // Retrieve the link provided by the host under the download button
                     string downloadLink = driver.FindElementByCssSelector("#dl > form > div > center > a").GetAttribute("href");
-                    int slashIndex = downloadLink.LastIndexOf('/');
-                    // Delete the started '/' from the URL.
-                    string fileName = downloadLink.Substring(slashIndex + 1, downloadLink.Length - slashIndex - 1);
-                    return ExecuteDownload(downloadLink, Configuration["DestinationDownload"], fileName);
+                    return Ok(new { Link = downloadLink, FileName = ExtractFilenameFromDownloadLink(downloadLink) });
                 }
             }
             else
@@ -166,34 +205,74 @@ namespace XDownloader.Controllers
         /// <summary>
         /// Return a list of links scraped from the source URL given in the <paramref name="parameters"/> under the property URL.
         /// </summary>
+        /// <remarks>
+        /// Minimal sample request:
+        ///
+        ///     { 
+        ///         "url": "https://ww2.zone-telechargement1.com/34408-jumanji-bienvenue-dans-la-jungle-french-bdrip.html" 
+        ///     }
+        ///
+        /// Extended sample request
+        ///
+        ///     { 
+        ///         "url": "https://ww2.zone-telechargement1.com/34408-jumanji-bienvenue-dans-la-jungle-french-bdrip.html",
+        ///         "hosts": [ "uptobox", "1fichier" ] 
+        ///     }
+        /// </remarks>
         /// <param name="parameters">The request parameters serialize as an object.</param>
         /// <returns>
         /// If there is at least one host define in the Hosts property of <paramref name="parameters"/> then it will return a filtered list of url now
         /// unprotected as a JSON object. Otherwise it will return a list of all the protected url found on the source page.
         /// </returns>
+        /// <response code="200">
+        /// A filtered list of url unprotected if a host was provided.
+        /// Otherwise it will return a list of all the protected url found on the source page.
+        /// </response>
+        /// <response code="400">
+        /// If a required parameter was missing this code is return.
+        /// Yous should check the reponse message to understand what was missing.
+        /// </response>
+        /// <response code="404">
+        /// If no protected links were found on the given page then it will return an empty response.
+        /// </response>
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         [HttpPost("LinksFromSource", Name = "Get_All_Links_From_Source_Page")]
         public IActionResult GetLinksFromSource([FromBody] RequestParameters parameters)
         {
-            using (var driver = new ChromeDriver(ChromeDriverDirectory, ChromeOptions))
+            // Check if the necessary properties are defined.
+            if (parameters != null && !string.IsNullOrEmpty(parameters.Url))
             {
-                List<string> protectedLinks = new List<string>();
-                // Navigate to the given URL.
-                driver.Navigate().GoToUrl(parameters.Url);
-                // Get all html element that contains "dl-protect" in their href attribute.
-                var links = driver.FindElementsByCssSelector("a[href*=\"dl-protect\"]");
-
-                // For each element retrieve the actual URL
-                foreach (var link in links)
+                using (var driver = new ChromeDriver(ChromeDriverDirectory, ChromeOptions))
                 {
-                    protectedLinks.Add(link.GetAttribute("href"));
-                }
+                    List<string> protectedLinks = new List<string>();
+                    // Navigate to the given URL.
+                    driver.Navigate().GoToUrl(parameters.Url);
+                    // Get all html element that contains "dl-protect" in their href attribute.
+                    var links = driver.FindElementsByCssSelector("a[href*=\"dl-protect\"]");
 
-                // If there are no host then return the list of protected URL.
-                if (parameters.Hosts.Count == 0)
-                    return Json(protectedLinks);
-                // Else we filter the list of protected URL by hosts list.
-                else
-                    return Json(FilterUriList(protectedLinks, parameters.Hosts));
+                    // If no links were found
+                    if (links.Count == 0)
+                        return NotFound($"Il n'y avait aucun lien protégés sur la page chargée à partir de l'url {parameters.Url}");
+
+                    // For each element retrieve the actual URL
+                    foreach (var link in links)
+                    {
+                        protectedLinks.Add(link.GetAttribute("href"));
+                    }
+
+                    // If there are no host then return the list of protected URL.
+                    if (parameters.Hosts == null || parameters.Hosts.Count == 0)
+                        return Ok(protectedLinks);
+                    // Else we filter the list of protected URL by hosts list.
+                    else
+                        return Ok(FilterUriList(protectedLinks, parameters.Hosts));
+                } 
+            }
+            else
+            {
+                return BadRequest($"Un ou plusieurs paramètres d'entrés sont manquants voici le contenu de vos paramètres : {parameters.ToString()}");
             }
         }
 
@@ -202,21 +281,34 @@ namespace XDownloader.Controllers
         #region Private Methods
 
         /// <summary>
+        /// Extract the filename that will be downlaoded from the <paramref name="downloadLink"/>.
+        /// </summary>
+        /// <param name="downloadLink">Url from which it will extract the filename.</param>
+        /// <returns>The extracted filename of the given url.</returns>
+        private static string ExtractFilenameFromDownloadLink(string downloadLink)
+        {
+            // The filename is always after the last slash of the url.
+            int slashIndex = downloadLink.LastIndexOf('/');
+            // Delete the started '/' from the URL.
+            return downloadLink.Substring(slashIndex + 1, downloadLink.Length - slashIndex - 1);
+        }
+
+        /// <summary>
         /// Retrieve the host link under the <paramref name="protecterURL"/>.
         /// </summary>
         /// <param name="protecterURL">The protected URL from which we want to find the host link.</param>
         /// <param name="driver"></param>
         /// <returns>The host link unprotected.</returns>
-        private static string FindHostUnderProtector(string protecterURL, ChromeDriver driver)
+        private static string FindHostLinkUnderProtector(string protecterURL, ChromeDriver driver)
         {
             try
             {
                 // Navigate to the given url
                 driver.Navigate().GoToUrl(protecterURL);
-                // Find the button and perform a click and wait for the implicit refresh which happen. 
+                // Find the button and perform a click and wait for the implicit refresh which happen.
                 driver.FindElement(By.ClassName("continuer")).Click();
                 // Retrieve the link by css selector, this will stop working at the moment where dl-protect will change their html structure.
-                return driver.FindElementByCssSelector("div.lienet > a[href*=\"http\"]").Text;                
+                return driver.FindElementByCssSelector("div.lienet > a[href*=\"http\"]").Text;
             }
             catch (Exception ex)
             {
@@ -239,7 +331,7 @@ namespace XDownloader.Controllers
                 foreach (string protectedLink in protectedLinks)
                 {
                     // Find the actual host link
-                    string hostedLink = FindHostUnderProtector(protectedLink, driver);
+                    string hostedLink = FindHostLinkUnderProtector(protectedLink, driver);
                     if (!string.IsNullOrEmpty(hostedLink))
                     {
                         foreach (string desiredHost in desiredHosts)
