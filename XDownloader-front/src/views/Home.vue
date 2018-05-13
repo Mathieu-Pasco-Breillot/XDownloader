@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <img src="../assets/logo.png">
+    <img src="../assets/logo.png" width="200px">
 
     <div class="grid">
       <div class="protector">
@@ -21,8 +21,7 @@ import { Component, Vue } from 'vue-property-decorator';
 // import HelloWorld from "@/components/HelloWorld.vue"; // @ is an alias to /src
 
 @Component({
-  components: {
-  },
+  components: {},
 })
 export default class Home extends Vue {}
 </script>
@@ -32,12 +31,7 @@ export default class Home extends Vue {}
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-gap: 1px;
-  background-color: lightgrey;
+  grid-gap: 2em;
 }
 
-.grid > div {
-  background-color: white;
-  padding: 1em;
-}
 </style>
