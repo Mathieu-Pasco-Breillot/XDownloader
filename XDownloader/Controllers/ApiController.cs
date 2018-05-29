@@ -128,20 +128,13 @@ namespace XDownloader.Controllers
         }
 
         /// <summary>
-        /// Retrieve the link under the protected URL. It only works for the Uptobox host for now.
+        /// Retrieve the link under the protected URL.
         /// </summary>
         /// <remarks>
-        /// Minimal sample request:
+        /// Sample request:
         ///
         ///     {
         ///         "url": "https://www.dl-protect1.com/1234556001234556021234556101234556156bsfkx1psaa8"
-        ///     }
-        ///
-        /// Extended sample request
-        ///
-        ///     {
-        ///         "url": "https://www.dl-protect1.com/1234556001234556021234556101234556156bsfkx1psaa8",
-        ///         "hosts": [ "uptobox", "1fichier" ] 
         ///     }
         /// </remarks>
         /// <param name="parameters">The request parameters serialize as an object.</param>
@@ -157,6 +150,9 @@ namespace XDownloader.Controllers
         /// <response code="404">
         /// If no host link could be found from the protected link.
         /// </response>
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
         [HttpPost("LinksFromProtector", Name = "Get_Link_From_Protector_Page")]
         public IActionResult GetLinkFromProtector([FromBody] RequestParameters parameters)
         {
@@ -168,15 +164,57 @@ namespace XDownloader.Controllers
                     string link = FindHostLinkUnderProtector(parameters.Url, driver);
                     if (string.IsNullOrEmpty(link))
                         return NotFound($"Impossible de trouver un lien d'hébergeur pour les paramètres suivants : {parameters.ToString()}");
+                    else
+                        return Ok(new { Link = link });
+                }
+            }
+            else
+            {
+                return BadRequest($"Un ou plusieurs paramètres d'entrés sont manquants voici le contenu de vos paramètres : {parameters.ToString()}");
+            }
+        }
 
+        /// <summary>
+        /// Retrieve the download link.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     {
+        ///         "url": "https://uptobox.com/df5bzx8utkwt"
+        ///     }
+        /// </remarks>
+        /// <param name="parameters">The request parameters serialize as an object.</param>
+        /// <returns>The download link found from the given host link.</returns>
+        /// <responde code="200">
+        /// The download link from which we'll get the file.
+        /// </responde>
+        /// <responde code="400">
+        /// If a required parameter was missing this code is return.
+        /// Yous should check the reponse message to understand what was missing.
+        /// </responde>
+        /// <response code="404">
+        /// If no download link could be found from the host link.
+        /// </response>
+        [ProducesResponseType(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [HttpPost("LinksFromUptobox", Name = "Get_Link_From_Host_Uptobox")]
+        public IActionResult GetLinkFromUptobox([FromBody] RequestParameters parameters)
+        {
+            // Check if the necessary properties are defined.
+            if (parameters != null && !string.IsNullOrEmpty(parameters.Url))
+            {
+                using (var driver = new ChromeDriver(ChromeDriverDirectory, ChromeOptions))
+                {
                     string relativeLink = string.Empty;
 
                     Host host = xConfig.Hosts.First(h => h.Name == "uptobox");
                     // Handle the case where the link doesn't start with "https"
-                    if (link.Contains("https"))
-                        relativeLink = link.Replace(host.URL, string.Empty);
+                    if (parameters.Url.Contains("https"))
+                        relativeLink = parameters.Url.Replace(host.URL, string.Empty);
                     else
-                        relativeLink = link.Replace(host.URL.Replace("https", "http"), string.Empty);
+                        relativeLink = parameters.Url.Replace(host.URL.Replace("https", "http"), string.Empty);
 
                     #region Host Authentication And Redirection
 
@@ -191,9 +229,16 @@ namespace XDownloader.Controllers
 
                     #endregion Host Authentication And Redirection
 
-                    // Retrieve the link provided by the host under the download button
-                    string downloadLink = driver.FindElementByCssSelector("#dl > form > div > center > a").GetAttribute("href");
-                    return Ok(new { Link = downloadLink, FileName = ExtractFilenameFromDownloadLink(downloadLink) });
+                    string downloadLink = string.Empty;
+                    try
+                    {
+                        downloadLink = driver.FindElementByCssSelector("#dl > form > div > center > a").GetAttribute("href");
+                        return Ok(new { Link = downloadLink, FileName = ExtractFilenameFromDownloadLink(downloadLink) });
+                    }
+                    catch(Exception ex)
+                    {
+                        return NotFound(new { Msg = $"Impossible de trouver un lien de téléchargement pour les paramètres suivants : {parameters.ToString()}", Exception = ex });
+                    }
                 }
             }
             else
@@ -263,12 +308,12 @@ namespace XDownloader.Controllers
                     }
 
                     // If there are no host then return the list of protected URL.
-                    if (parameters.Hosts == null || parameters.Hosts.Count == 0)
+                    if (parameters.Hosts == null || parameters.Hosts.Count() == 0)
                         return Ok(protectedLinks);
                     // Else we filter the list of protected URL by hosts list.
                     else
-                        return Ok(FilterUriList(protectedLinks, parameters.Hosts));
-                } 
+                        return Ok(FilterUriList(protectedLinks, parameters.Hosts.ToList()));
+                }
             }
             else
             {
@@ -322,11 +367,10 @@ namespace XDownloader.Controllers
         /// <param name="protectedLinks">The list of protected url to filter.</param>
         /// <param name="desiredHosts">The list of host to power the filter.</param>
         /// <returns>The list of unprotected url filtered by the <paramref name="desiredHosts"/>.</returns>
-        private List<string> FilterUriList(List<string> protectedLinks, List<string> desiredHosts)
+        private IEnumerable<string> FilterUriList(List<string> protectedLinks, List<string> desiredHosts)
         {
             using (var driver = new ChromeDriver(ChromeDriverDirectory, ChromeOptions))
             {
-                List<string> uriList = new List<string>();
                 // For each protected url
                 foreach (string protectedLink in protectedLinks)
                 {
@@ -338,11 +382,10 @@ namespace XDownloader.Controllers
                         {
                             // If the link contains the dns of an host then we add it to the final list.
                             if (hostedLink.Contains(desiredHost))
-                                uriList.Add(hostedLink);
+                                yield return hostedLink;
                         }
                     }
                 }
-                return uriList;
             }
         }
 

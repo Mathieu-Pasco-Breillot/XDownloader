@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace XDownloader.Models
 {
@@ -13,7 +14,7 @@ namespace XDownloader.Models
         /// <summary>
         /// The list of hosts that should be handle by the scrapper.
         /// </summary>
-        public List<string> Hosts { get; set; }
+        public IEnumerable<string> Hosts { get; set; }
 
         /// <summary>
         /// Any kind of url, it may be a protected url or a source url.
@@ -33,8 +34,8 @@ namespace XDownloader.Models
         public override string ToString()
         {
             string hosts = string.Empty;
-            if (Hosts != null && Hosts.Count != 0)
-                Hosts.ForEach(x => hosts += $"{x},");
+            if (Hosts != null && Hosts.Count() != 0)
+                Hosts.ToList().ForEach(x => hosts += $"{x},");
             return $"URL : {Url} | Hosts : {hosts}";
         }
 
