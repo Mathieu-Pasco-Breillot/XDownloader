@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD:XDownloader-front/package.json
-  "name": "XDownloader-front",
-=======
   "name": "front",
->>>>>>> Initialisation correcte de vue avec TypeScript. Correction d'un variable non utilisée en C#.:front/package.json
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,17 +9,12 @@
   },
   "dependencies": {
     "vue": "^2.5.16",
-<<<<<<< HEAD:XDownloader-front/package.json
-    "vue-class-component": "^6.0.0",
-    "vue-property-decorator": "^6.0.0",
-    "vue-resource": "https://github.com/NateScarlet/vue-resource/tarball/1.5.1",
-=======
->>>>>>> Initialisation correcte de vue avec TypeScript. Correction d'un variable non utilisée en C#.:front/package.json
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-typescript": "^3.0.0-beta.15",
+    "@vue/cli-plugin-babel": "^3.0.0-beta.15",
+    "@vue/cli-plugin-eslint": "^3.0.0-beta.15",
     "@vue/cli-service": "^3.0.0-beta.15",
     "vue-template-compiler": "^2.5.16"
   },
@@ -31,18 +22,5 @@
     "> 1%",
     "last 2 versions",
     "not ie <= 8"
-  ],
-  "gitHooks": {
-    "pre-commit": "lint-staged"
-  },
-  "lint-staged": {
-    "*.ts": [
-      "vue-cli-service lint",
-      "git add"
-    ],
-    "*.vue": [
-      "vue-cli-service lint",
-      "git add"
-    ]
-  }
+  ]
 }

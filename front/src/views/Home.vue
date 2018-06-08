@@ -5,14 +5,14 @@
   </div>
 </template>
 
-<script lang="ts">
-  import Vue      from "vue";
-  import Download from "@/components/Download.vue"; // @ is an alias to /src
+<script>
+  // @ is an alias to /src
+  import Download from "@/components/Download.vue";
 
-  export default Vue.extend( {
+  export default {
     name      : "home",
     components: {
       Download,
     },
-  } );
+  };
 </script>

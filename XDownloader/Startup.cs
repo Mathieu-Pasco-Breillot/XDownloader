@@ -23,6 +23,7 @@ namespace XDownloader
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
             services.AddMvc();
             services.AddOptions();
             services.Configure<XConfig>(Configuration.GetSection("XConfig"));
@@ -62,6 +63,8 @@ namespace XDownloader
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+
+            app.UseCors(builder => builder.WithOrigins("http://localhost:8080").AllowAnyHeader());
 
             app.UseStaticFiles();
 
