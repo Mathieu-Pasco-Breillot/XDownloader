@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using XDownloader.Models;
 
 namespace XDownloader.Controllers
@@ -52,7 +52,8 @@ namespace XDownloader.Controllers
         {
             get
             {
-                return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string chromeDriverDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                return chromeDriverDirectory;
             }
         }
 
@@ -68,11 +69,6 @@ namespace XDownloader.Controllers
             }
             set => chromeOptions = value;
         }
-
-        /// <summary>
-        /// Access the Configuration.
-        /// </summary>
-        public IConfiguration Configuration { get; set; }
 
         #endregion Public Properties
 
@@ -163,15 +159,12 @@ namespace XDownloader.Controllers
                 {
                     string link = FindHostLinkUnderProtector(parameters.Url, driver);
                     if (string.IsNullOrEmpty(link))
-                        return NotFound($"Impossible de trouver un lien d'hébergeur pour les paramètres suivants : {parameters.ToString()}");
-                    else
-                        return Ok(new { Link = link });
+                        return NotFound($"Impossible de trouver un lien d'hébergeur pour les paramètres suivants : {parameters}");
+                    return Ok(new { Link = link });
                 }
             }
-            else
-            {
-                return BadRequest($"Un ou plusieurs paramètres d'entrés sont manquants voici le contenu de vos paramètres : {parameters.ToString()}");
-            }
+
+            return BadRequest($"Un ou plusieurs paramètres d'entrés sont manquants voici le contenu de vos paramètres : {parameters}");
         }
 
         /// <summary>
@@ -211,15 +204,12 @@ namespace XDownloader.Controllers
 
                     Host host = xConfig.Hosts.First(h => h.Name == "uptobox");
                     // Handle the case where the link doesn't start with "https"
-                    if (parameters.Url.Contains("https"))
-                        relativeLink = parameters.Url.Replace(host.URL, string.Empty);
-                    else
-                        relativeLink = parameters.Url.Replace(host.URL.Replace("https", "http"), string.Empty);
+                    relativeLink = parameters.Url.Contains("https") ? parameters.Url.Replace(host.Url, string.Empty) : parameters.Url.Replace(host.Url.Replace("https", "http"), string.Empty);
 
                     #region Host Authentication And Redirection
 
                     // Navigate to the login page of uptobox.com and define the redirection to the former link.
-                    driver.Navigate().GoToUrl($"{host.URL}?op=login&referer={relativeLink}");
+                    driver.Navigate().GoToUrl($"{host.Url}?op=login&referer={relativeLink}");
                     // Put the login defined in configuration
                     driver.FindElementByCssSelector("#login-form > input[name=login]").SendKeys(host.Login);
                     // Put the password defined in configuration
@@ -237,14 +227,12 @@ namespace XDownloader.Controllers
                     }
                     catch(Exception ex)
                     {
-                        return NotFound(new { Msg = $"Impossible de trouver un lien de téléchargement pour les paramètres suivants : {parameters.ToString()}", Exception = ex });
+                        return NotFound(new { Msg = $"Impossible de trouver un lien de téléchargement pour les paramètres suivants : {parameters}", Exception = ex });
                     }
                 }
             }
-            else
-            {
-                return BadRequest($"Un ou plusieurs paramètres d'entrés sont manquants voici le contenu de vos paramètres : {parameters.ToString()}");
-            }
+
+            return BadRequest($"Un ou plusieurs paramètres d'entrés sont manquants voici le contenu de vos paramètres : {parameters}");
         }
 
         /// <summary>
@@ -308,17 +296,14 @@ namespace XDownloader.Controllers
                     }
 
                     // If there are no host then return the list of protected URL.
-                    if (parameters.Hosts == null || parameters.Hosts.Count() == 0)
+                    if (parameters.Hosts == null || parameters.Hosts.Any())
                         return Ok(protectedLinks);
                     // Else we filter the list of protected URL by hosts list.
-                    else
-                        return Ok(FilterUriList(protectedLinks, parameters.Hosts.ToList()));
+                    return Ok(FilterUriList(protectedLinks, parameters.Hosts.ToList()));
                 }
             }
-            else
-            {
-                return BadRequest($"Un ou plusieurs paramètres d'entrés sont manquants voici le contenu de vos paramètres : {parameters.ToString()}");
-            }
+
+            return BadRequest($"Un ou plusieurs paramètres d'entrés sont manquants voici le contenu de vos paramètres : {parameters}");
         }
 
         #endregion Public Methods

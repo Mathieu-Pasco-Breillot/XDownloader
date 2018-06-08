@@ -28,7 +28,7 @@ namespace XDownloader.Models
         /// <summary>
         /// Host main domain
         /// </summary>
-        public string URL { get; set; }
+        public string Url { get; set; }
 
         #endregion Public Properties
     }
@@ -114,7 +114,7 @@ namespace XDownloader.Models
         /// <summary>
         /// Source main domain
         /// </summary>
-        public string URL { get; set; }
+        public string Url { get; set; }
 
         #endregion Public Properties
     }
