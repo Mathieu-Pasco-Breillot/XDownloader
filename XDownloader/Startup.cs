@@ -64,7 +64,9 @@ namespace XDownloader
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            app.UseCors(builder => builder.WithOrigins("http://localhost:8080").AllowAnyHeader());
+            app.UseCors(
+                builder => builder.WithOrigins("http://localhost:8080").AllowAnyMethod().AllowAnyHeader()
+            );
 
             app.UseStaticFiles();
 
