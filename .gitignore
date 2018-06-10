@@ -287,8 +287,5 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 
-# Visual Studio Code
-.vscode
-
 #XDownloader
 XDownloader/appsettings.json
