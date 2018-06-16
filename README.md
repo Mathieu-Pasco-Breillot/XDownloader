@@ -38,8 +38,8 @@ Actuellement il existe 2 routes d'API fonctionnelles.
 
 VERBE HTTP | NAME | URL | HEADERS | BODY
 ---------- | ---- | --- | ------- | ----
-POST | Get_Link_From_Protector_Page | http://localhost:56254/api/LinksFromProtector | Content-Type : application/json | "https://www.dl-protect1.com/123455600123455602123455610123455615vt8yz1pa62zz"
-POST | Get_All_Links_From_Source_Page | http://localhost:56254/api/LinksFromSource | Content-Type : application/json | "http://zone-telechargement1.com/31463-marvel-les-agents-du-s.h.i.e.l.d.-saison-5-vostfr-hd720p.html"
+POST | Get_Link_From_Protector_Page | http://localhost:5000/api/LinksFromProtector | Content-Type : application/json | "https://www.dl-protect1.com/123455600123455602123455610123455615vt8yz1pa62zz"
+POST | Get_All_Links_From_Source_Page | http://localhost:5000/api/LinksFromSource | Content-Type : application/json | "http://zone-telechargement1.com/31463-marvel-les-agents-du-s.h.i.e.l.d.-saison-5-vostfr-hd720p.html"
 
 ### Explications
 La route *Get_All_Links_From_Source_Page* s'occupe de récupérer tous les liens de hoster protégés par dl-protect.
