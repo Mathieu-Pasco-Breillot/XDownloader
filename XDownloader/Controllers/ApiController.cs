@@ -225,7 +225,7 @@ namespace XDownloader.Controllers
                         downloadLink = driver.FindElementByCssSelector("#dl > form > div > center > a").GetAttribute("href");
                         return Ok(new { Link = downloadLink, FileName = ExtractFilenameFromDownloadLink(downloadLink) });
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         return NotFound(new { Msg = $"Impossible de trouver un lien de téléchargement pour les paramètres suivants : {parameters}", Exception = ex });
                     }
@@ -342,6 +342,7 @@ namespace XDownloader.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return null;
             }
         }
