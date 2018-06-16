@@ -1,13 +1,13 @@
 <template>
   <div class="home">
-    <img src="../assets/logo.png">
+    <img src="../assets/logo.png" class="center"/>
     <Download/>
   </div>
 </template>
 
 <script lang="ts">
-  import { Component, Vue } from "vue-property-decorator";
-  import Download           from "@/components/Download.vue"; // @ is an alias to /src
+  import Download           from '@/components/Download.vue'; // @ is an alias to /src
+  import { Component, Vue } from 'vue-property-decorator';
 
   @Component( {
     components: {

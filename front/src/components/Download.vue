@@ -12,7 +12,7 @@
       </v-flex>
 
     </v-layout>
-    <v-flex>
+    <v-flex xs12 class="text-xs-center">
       <v-progress-circular
           :size="100"
           :width="15"
@@ -25,25 +25,24 @@
 </template>
 
 <script lang="ts">
-  import { Component, Vue } from "vue-property-decorator";
-  import axios              from "axios";
+  import axios              from 'axios';
+  import { Component, Vue } from 'vue-property-decorator';
 
   @Component
   export default class HelloWorld extends Vue {
     // initial data
-    protectorUrl: string = "";
-    sourceUrl: string    = "";
-    interval             = {};
-    progressValue        = 0;
+    protected protectorUrl: string = 'https://www.dl-protect1.com/123455600123455602123455610123455615vt8yz1pa62zz';
+    protected sourceUrl: string    = 'http://zone-telechargement1.com/31463-marvel-les-agents-du-s.h.i.e.l.d.-saison-5-vostfr-hd720p.html';
+    protected progressValue        = 0;
+    protected displayProgress      = false;
 
     // lifecycle hook
-    mounted() {
-      this.interval = setInterval( () => {
-        if (this.progressValue === 100) {
-          return (this.progressValue = 0);
-        }
-        this.progressValue += 10;
-      }, 1000 );
+    protected mounted() {
+      const config = {
+        onUploadProgress: (progressEvent: ProgressEvent) => {
+          this.progressValue = Math.floor( (progressEvent.loaded * 100) / progressEvent.total );
+        },
+      };
     }
 
     // computed
@@ -52,34 +51,38 @@
     // }
 
     // methods
-    getLinksFromProtector() {
-      // Starts to disply progress
+    protected getLinksFromProtector() {
+      // Starts to display progress
+      this.displayProgress = true;
 
-      axios.post( "http://localhost:56254/api/LinksFromProtector", {
-        // TODO: Pass the protector url.
-      } ).then( function (response) {
-        console.log( response );
-      } ).catch( function (error) {
-        console.log( error );
+      axios.post( 'http://localhost:5000/api/LinksFromProtector', {
+        hosts: [],
+        url: this.protectorUrl,
+      } ).then( (response) => {
+        this.displayProgress = false;
+      } ).catch( error => {
+        error.log( error );
+
+        this.displayProgress = false;
       } );
     }
 
     protected getLinksFromSource() {
-      axios.post( "http://localhost:56254/api/LinksFromSource", {
-        // TODO: Pass the source url.
-      } ).then( function (response) {
-        console.log( response );
-      } ).catch( function (error) {
-        console.log( error );
+      // Starts to display progress
+      this.displayProgress = true;
+
+      axios.post( 'http://localhost:5000/api/LinksFromSource', {
+        url: this.protectorUrl,
+      } ).then( response => {
+        this.displayProgress = false;
+      } ).catch( error => {
+        error.log( error );
+
+        this.displayProgress = false;
       } );
     }
   }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-  .grid {
-    display: grid;
-    grid-template-columns: auto auto;
-  }
-</style>
+<style scoped></style>
