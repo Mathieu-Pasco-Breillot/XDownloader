@@ -2,17 +2,19 @@
   <div>
     <v-layout row wrap>
       <v-flex xs12 md5>
-        <v-text-field v-model="protectorUrl" label="Protector Url"/>
-        <v-btn @click.prevent="getLinksFromProtector">OK</v-btn>
+        <v-text-field v-model="protectorUrl" label="Protector Url" :disabled="displayProgress"/>
+        <v-btn @click.prevent="getLinksFromProtector" :disabled="displayProgress">OK</v-btn>
+        {{protectorResponse}}
       </v-flex>
 
       <v-flex xs12 md5 offset-md2>
-        <v-text-field v-model="sourceUrl" label="Source Url" disabled/>
-        <v-btn @click.prevent="getLinksFromSource" disabled>OK</v-btn>
+        <v-text-field v-model="sourceUrl" label="Source Url" :disabled="displayProgress"/>
+        <v-btn @click.prevent="getLinksFromSource" :disabled="displayProgress">OK</v-btn>
+        {{sourceResponse}}
       </v-flex>
 
     </v-layout>
-    <v-flex xs12 class="text-xs-center">
+    <v-flex v-if="displayProgress" xs12 class="text-xs-center">
       <v-progress-circular
           :size="100"
           :width="15"
@@ -31,14 +33,20 @@
   @Component
   export default class HelloWorld extends Vue {
     // initial data
+    // tslint:disable-next-line
     protected protectorUrl: string = 'https://www.dl-protect1.com/123455600123455602123455610123455615vt8yz1pa62zz';
+    // tslint:disable-next-line
     protected sourceUrl: string    = 'http://zone-telechargement1.com/31463-marvel-les-agents-du-s.h.i.e.l.d.-saison-5-vostfr-hd720p.html';
     protected progressValue        = 0;
     protected displayProgress      = false;
+    protected axiosPostConfig: any;
+
+    protected protectorResponse;
+    protected sourceResponse;
 
     // lifecycle hook
     protected mounted() {
-      const config = {
+      this.axiosPostConfig = {
         onUploadProgress: (progressEvent: ProgressEvent) => {
           this.progressValue = Math.floor( (progressEvent.loaded * 100) / progressEvent.total );
         },
@@ -55,14 +63,14 @@
       // Starts to display progress
       this.displayProgress = true;
 
-      axios.post( 'http://localhost:5000/api/LinksFromProtector', {
+      axios.post( 'http://192.168.1.5:5000/api/LinksFromProtector', {
         hosts: [],
-        url: this.protectorUrl,
-      } ).then( (response) => {
-        this.displayProgress = false;
+        url  : this.protectorUrl,
+      }, this.axiosPostConfig ).then( response => {
+        this.protectorResponse = response;
+        this.displayProgress   = false;
       } ).catch( error => {
         error.log( error );
-
         this.displayProgress = false;
       } );
     }
@@ -71,13 +79,14 @@
       // Starts to display progress
       this.displayProgress = true;
 
-      axios.post( 'http://localhost:5000/api/LinksFromSource', {
-        url: this.protectorUrl,
-      } ).then( response => {
+      axios.post( 'http://192.168.1.5:5000/api/LinksFromProtector', {
+        hosts: [],
+        url  : this.protectorUrl,
+      }, this.axiosPostConfig ).then( response => {
+        this.sourceResponse  = response;
         this.displayProgress = false;
       } ).catch( error => {
         error.log( error );
-
         this.displayProgress = false;
       } );
     }
