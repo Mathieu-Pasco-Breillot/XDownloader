@@ -4,13 +4,13 @@
       <v-flex xs12 md5>
         <v-text-field v-model="protectorUrl" label="Protector Url" :disabled="displayProgress"/>
         <v-btn @click.prevent="getLinksFromProtector" :disabled="displayProgress">OK</v-btn>
-        {{protectorResponse}}
+        {{protectorResponseData}}
       </v-flex>
 
       <v-flex xs12 md5 offset-md2>
         <v-text-field v-model="sourceUrl" label="Source Url" :disabled="displayProgress"/>
         <v-btn @click.prevent="getLinksFromSource" :disabled="displayProgress">OK</v-btn>
-        {{sourceResponse}}
+        {{sourceResponseData}}
       </v-flex>
 
     </v-layout>
@@ -41,8 +41,8 @@
     protected displayProgress      = false;
     protected axiosPostConfig: any;
 
-    protected protectorResponse;
-    protected sourceResponse;
+    protected protectorResponseData = {};
+    protected sourceResponseData    = {};
 
     // lifecycle hook
     protected mounted() {
@@ -67,8 +67,13 @@
         hosts: [],
         url  : this.protectorUrl,
       }, this.axiosPostConfig ).then( response => {
-        this.protectorResponse = response;
-        this.displayProgress   = false;
+        this.protectorResponseData = response;
+
+        if (response.status === 200) {
+          this.protectorResponseData = response.data;
+        }
+
+        this.displayProgress = false;
       } ).catch( error => {
         error.log( error );
         this.displayProgress = false;
@@ -83,7 +88,12 @@
         hosts: [],
         url  : this.protectorUrl,
       }, this.axiosPostConfig ).then( response => {
-        this.sourceResponse  = response;
+        this.sourceResponseData = response;
+
+        if (response.status === 200) {
+          this.sourceResponseData = response.data;
+        }
+
         this.displayProgress = false;
       } ).catch( error => {
         error.log( error );
