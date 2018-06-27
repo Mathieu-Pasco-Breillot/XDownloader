@@ -9,18 +9,25 @@ L'ensemble des ressources sont disponible à cette adresse : https://goo.gl/eF7z
 Ces ressources sont publiques et consultables par tous(tes)
 
 ## Pré-requis
-1. Installer [Visual Studio 2017 Community](https://www.visualstudio.com/fr/thank-you-downloading-visual-studio/?sku=Community&rel=15)
-    * Installer tous les composants des sections :
+1. Installer 
+    
+    * [Visual Studio 2017 Community](https://www.visualstudio.com/fr/thank-you-downloading-visual-studio/?sku=Community&rel=15)
         * **Développement web et ASP.NET**
         * **Développement multiplateforme .NET Core**
+    * [Google Chrome](https://www.google.fr/chrome/index.html) (Pour aller scrapper)
+    * [NodeJs](https://nodejs.org) et surtout npm pour vue.
+
 2. Cloner ce repository sur votre machine.
 
-## Démarrage de la solution
-Après avoir installer VS2017 et cloner le **XDownloader** repository vous pouvez démarrer la solution en exécutant le fichier **XDownloader.sln**.
+## Démarrage de la solution .net CORE
+Après avoir installé VS2017 et cloner le **XDownloader** repository vous pouvez démarrer la solution en exécutant le fichier **XDownloader.sln**.
 Lancez une première compilation de la solution complète, cela devrait automatiquement restaurer les packages nugets manquant à la solution.
 
 ### En cas d'erreur de compilation du à la restauration des packages NuGet
 Faites un clique droit sur la solution depuis l'**Explorateur de solutions** puis cliquez sur **Restaurer les packages NuGet**.
+
+## Démarrage de la solution VueJS
+Après avoir installé NodeJs et donc npm se rendre dans le dossier "front" de l'application et éxécuter `npm run serve` pour lancer l'application en mode développement.
 
 ## Configuration de la solution
 Dupliquer le fichier **appsettings.example.json** en **appsettings.json** en renseignez-le avec des valeurs adéquat.
@@ -31,8 +38,8 @@ Actuellement il existe 2 routes d'API fonctionnelles.
 
 VERBE HTTP | NAME | URL | HEADERS | BODY
 ---------- | ---- | --- | ------- | ----
-POST | Get_Link_From_Protector_Page | http://localhost:56254/api/LinksFromProtector | Content-Type : application/json | "https://www.dl-protect1.com/123455600123455602123455610123455615vt8yz1pa62zz"
-POST | Get_All_Links_From_Source_Page | http://localhost:56254/api/LinksFromSource | Content-Type : application/json | "http://zone-telechargement1.com/31463-marvel-les-agents-du-s.h.i.e.l.d.-saison-5-vostfr-hd720p.html"
+POST | Get_Link_From_Protector_Page | http://localhost:5000/api/LinksFromProtector | Content-Type : application/json | "https://www.dl-protect1.com/123455600123455602123455610123455615vt8yz1pa62zz"
+POST | Get_All_Links_From_Source_Page | http://localhost:5000/api/LinksFromSource | Content-Type : application/json | "http://zone-telechargement1.com/31463-marvel-les-agents-du-s.h.i.e.l.d.-saison-5-vostfr-hd720p.html"
 
 ### Explications
 La route *Get_All_Links_From_Source_Page* s'occupe de récupérer tous les liens de hoster protégés par dl-protect.
